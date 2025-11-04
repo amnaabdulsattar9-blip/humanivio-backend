@@ -26,24 +26,29 @@ app.get("/api/health", (req, res) => {
 });
 
 // --- Main Humanize endpoint ---
-app.post("/api/humanize", async (req, res) => {
+app.post('/api/humanize', async (req, res) => {
+  const { text } = req.body;
+
   try {
-    const { text } = req.body;
-
-    if (!text) {
-      return res.status(400).json({ error: "No text provided." });
-    }
-
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: text }],
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an AI that rewrites text to make it sound more natural, human, and emotionally engaging. You do not add new information — just make the tone conversational and human-like.",
+        },
+        {
+          role: "user",
+          content: text,
+        },
+      ],
     });
 
-    const output = response.choices?.[0]?.message?.content || "No response.";
-    res.json({ humanized: output });
+    res.json({ humanizedText: response.choices[0].message.content });
   } catch (error) {
-    console.error("❌ OpenAI Error:", error.message);
-    res.status(500).json({ error: error.message });
+    console.error("Error humanizing text:", error.message);
+    res.status(500).json({ error: "Failed to humanize text." });
   }
 });
 
